@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ウリカイ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#faf5ff;color:#1a1a2e;font-size:14px;min-height:100vh}
+
+/* ── ヘッダー ── */
+.app-header{background:linear-gradient(135deg,#7c3aed,#db2777);padding:0;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px #7c3aed44}
+.header-top{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.logo{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.02em}
+.logo span{color:#fde68a}
+.header-search{flex:1;background:rgba(255,255,255,.2);border:none;border-radius:20px;padding:7px 14px;font-size:13px;color:#fff;outline:none}
+.header-search::placeholder{color:rgba(255,255,255,.7)}
+.header-icon{font-size:22px;cursor:pointer}
+.header-tabs{display:flex;overflow-x:auto;padding:0 14px 8px;gap:6px;scrollbar-width:none}
+.header-tabs::-webkit-scrollbar{display:none}
+.tab{background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:16px;padding:4px 14px;font-size:12px;cursor:pointer;white-space:nowrap;transition:.15s}
+.tab.active{background:#fff;color:#7c3aed;font-weight:bold}
+
+/* ── 商品グリッド ── */
+.page{display:none}
+.page.active{display:block}
+
+#page-list{padding:12px}
+.section-label{font-size:12px;color:#7c3aed;font-weight:bold;margin-bottom:8px;padding-left:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 8px #0001;cursor:pointer;transition:.15s;border:1.5px solid transparent}
+.card:hover{border-color:#c084fc;box-shadow:0 2px 16px #7c3aed22;transform:translateY(-1px)}
+.card-img{width:100%;aspect-ratio:1;background:linear-gradient(135deg,#f3e8ff,#fce7f3);display:flex;align-items:center;justify-content:center;font-size:52px;position:relative}
+.badge{position:absolute;top:6px;left:6px;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:bold}
+.badge-new{background:#7c3aed;color:#fff}
+.badge-sold{background:#9ca3af;color:#fff}
+.badge-used{background:#f59e0b;color:#fff}
+.card-body{padding:8px}
+.card-title{font-size:12px;line-height:1.4;color:#1a1a2e;margin-bottom:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.card-price{font-size:15px;font-weight:bold;color:#7c3aed}
+.card-price span{font-size:10px;font-weight:normal;color:#9ca3af}
+.card-seller{font-size:10px;color:#9ca3af;margin-top:3px;display:flex;align-items:center;gap:3px}
+.stars{color:#f59e0b;font-size:9px}
+
+/* ── 商品詳細 ── */
+#page-detail{background:#fff;min-height:100vh}
+.detail-back{display:flex;align-items:center;gap:6px;padding:12px 14px;border-bottom:1px solid #f3f4f6;cursor:pointer;font-size:13px;color:#7c3aed;font-weight:bold}
+.detail-img{width:100%;aspect-ratio:1;background:linear-gradient(135deg,#f3e8ff,#fce7f3);display:flex;align-items:center;justify-content:center;font-size:100px;max-height:340px}
+.detail-body{padding:14px}
+.detail-price{font-size:26px;font-weight:900;color:#7c3aed;margin-bottom:4px}
+.detail-price span{font-size:13px;font-weight:normal;color:#9ca3af}
+.detail-title{font-size:16px;font-weight:bold;color:#1a1a2e;margin-bottom:10px;line-height:1.4}
+.detail-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.dtag{font-size:10px;background:#f3e8ff;color:#7c3aed;border-radius:10px;padding:2px 8px}
+.detail-info-box{background:#faf5ff;border-radius:10px;padding:12px;margin-bottom:14px}
+.detail-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #ede9fe;font-size:12px}
+.detail-row:last-child{border-bottom:none}
+.dr-label{color:#9ca3af;min-width:80px}
+.dr-val{color:#1a1a2e;flex:1}
+.detail-desc-label{font-size:13px;font-weight:bold;color:#1a1a2e;margin-bottom:6px}
+.detail-desc{font-size:13px;line-height:1.8;color:#374151;margin-bottom:16px}
+
+/* 出品者 */
+.seller-box{background:#faf5ff;border-radius:12px;padding:12px;margin-bottom:16px;cursor:pointer;transition:.15s;border:1.5px solid #ede9fe}
+.seller-box:hover{border-color:#c084fc}
+.seller-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.seller-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#db2777);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:bold;flex-shrink:0}
+.seller-name{font-size:14px;font-weight:bold;color:#1a1a2e}
+.seller-meta{font-size:11px;color:#9ca3af;margin-top:1px}
+.seller-bio{font-size:12px;color:#6b7280;line-height:1.6;border-top:1px solid #ede9fe;padding-top:8px}
+.seller-link{font-size:11px;color:#7c3aed;margin-top:6px;text-align:right}
+
+/* コメント */
+.comments-label{font-size:13px;font-weight:bold;color:#1a1a2e;margin-bottom:10px}
+.comment{background:#f9fafb;border-radius:10px;padding:10px;margin-bottom:8px}
+.comment-top{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.comment-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#f9a8d4);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0}
+.comment-name{font-size:11px;font-weight:bold;color:#374151}
+.comment-stars{color:#f59e0b;font-size:10px;margin-left:auto}
+.comment-text{font-size:12px;color:#6b7280;line-height:1.6}
+.comment-date{font-size:10px;color:#d1d5db;margin-top:3px;text-align:right}
+
+/* 購入ボタン */
+.buy-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid #f3f4f6;padding:12px 14px;display:flex;gap:8px}
+.btn-like{background:#fdf4ff;border:1.5px solid #e9d5ff;color:#7c3aed;border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;font-weight:bold}
+.btn-buy{flex:1;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:bold;cursor:pointer}
+.btn-buy.sold{background:#9ca3af;cursor:default}
+.btn-buy.purchased{background:linear-gradient(135deg,#059669,#0d9488)}
+
+/* 出品者プロフィール詳細 */
+#page-profile{background:#fff;min-height:100vh}
+.profile-header{background:linear-gradient(135deg,#7c3aed,#db2777);padding:30px 14px 20px;text-align:center;color:#fff}
+.profile-avatar-lg{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 10px;border:3px solid rgba(255,255,255,.5)}
+.profile-name-lg{font-size:20px;font-weight:900}
+.profile-stats{display:flex;justify-content:center;gap:24px;margin-top:10px;font-size:11px;opacity:.9}
+.stat{text-align:center}
+.stat-num{font-size:18px;font-weight:bold;display:block}
+.profile-body{padding:14px}
+.profile-bio-box{background:#faf5ff;border-radius:12px;padding:12px;margin-bottom:16px;font-size:13px;line-height:1.8;color:#374151}
+.listed-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.listed-item{background:#f3f4f6;border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;overflow:hidden}
+.sold-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#fff;letter-spacing:.05em}
+
+/* ── ナビゲーション ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #f3f4f6;display:flex;padding:8px 0 20px;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:#9ca3af;font-size:10px;transition:.15s}
+.nav-item.active{color:#7c3aed}
+.nav-icon{font-size:22px}
+body{padding-bottom:80px}
+
+/* 売り切れライン */
+.sold-line{text-align:center;color:#9ca3af;font-size:12px;padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:14px}
+
+@media(min-width:480px){
+  body{max-width:430px;margin:0 auto;box-shadow:0 0 40px #0002}
+}
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div class="app-header">
+  <div class="header-top">
+    <div class="logo">ウリ<span>カイ</span></div>
+    <input class="header-search" placeholder="🔍　なんでも売り買い" readonly>
+    <span class="header-icon">🔔</span>
+    <span class="header-icon">👤</span>
+  </div>
+  <div class="header-tabs">
+    <button class="tab active" onclick="filterTab(this,'すべて')">すべて</button>
+    <button class="tab" onclick="filterTab(this,'キッズ')">👶 キッズ</button>
+    <button class="tab" onclick="filterTab(this,'本')">📚 本・教科書</button>
+    <button class="tab" onclick="filterTab(this,'生き物')">🐾 生き物</button>
+    <button class="tab" onclick="filterTab(this,'その他')">✨ その他</button>
+  </div>
+</div>
+
+<!-- ── 商品一覧ページ ── -->
+<div class="page active" id="page-list">
+  <div style="padding:12px">
+
+    <!-- おすすめ -->
+    <div class="section-label">✨ おすすめ商品</div>
+    <div class="grid">
+
+      <!-- 七五三キッド -->
+      <div class="card" onclick="showDetail('753')">
+        <div class="card-img">
+          👧
+          <span class="badge badge-new">新品</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">七五三キッド（女の子）3才・7才参り対応</div>
+          <div class="card-price">¥50,000<span> 税込</span></div>
+          <div class="card-seller"><span class="stars">★★★★★</span> かみのこ株式会社</div>
+        </div>
+      </div>
+
+      <!-- 優しいドイツ語 -->
+      <div class="card" onclick="showDetail('german')">
+        <div class="card-img" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
+          📖
+          <span class="badge badge-used">書込あり</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">【書き込みあり】優しいドイツ語 第3版</div>
+          <div class="card-price">¥480<span> 税込</span></div>
+          <div class="card-seller"><span class="stars">★★★★★</span> 堕ちないさん</div>
+        </div>
+      </div>
+
+      <!-- ダミー商品3 -->
+      <div class="card">
+        <div class="card-img" style="background:linear-gradient(135deg,#fce7f3,#fdf4ff)">🪄</div>
+        <div class="card-body">
+          <div class="card-title">縁結びチケット 5枚セット（期限なし）</div>
+          <div class="card-price">¥1,200</div>
+          <div class="card-seller"><span class="stars">★★★★☆</span> 恋愛成就堂</div>
+        </div>
+      </div>
+
+      <!-- ダミー商品4 -->
+      <div class="card">
+        <div class="card-img" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5)">🎍</div>
+        <div class="card-body">
+          <div class="card-title">座敷童子（短期レンタル7日間）</div>
+          <div class="card-price">¥3,000</div>
+          <div class="card-seller"><span class="stars">★★★★★</span> ざしきわらし本舗</div>
+        </div>
+      </div>
+
+      <!-- ダミー商品5 -->
+      <div class="card">
+        <div class="card-img" style="background:linear-gradient(135deg,#fff7ed,#fef3c7)">🌀</div>
+        <div class="card-body">
+          <div class="card-title">見えない何かに関する完全マニュアル（PDF版）</div>
+          <div class="card-price">¥680</div>
+          <div class="card-seller"><span class="stars">★★★☆☆</span> 不思議商会</div>
+        </div>
+      </div>
+
+      <!-- ダミー商品6 -->
+      <div class="card">
+        <div class="card-img" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">🧹</div>
+        <div class="card-body">
+          <div class="card-title">家電の機嫌をとる方法 入門書</div>
+          <div class="card-price">¥320</div>
+          <div class="card-seller"><span class="stars">★★★★☆</span> 家電話し合い研究所</div>
+        </div>
+      </div>
+
+    </div><!-- /grid -->
+
+    <!-- 新着 -->
+    <div class="section-label" style="margin-top:8px">🆕 新着</div>
+    <div class="grid">
+      <!-- 七五三キッド 男の子 -->
+      <div class="card" onclick="showDetail('753boy')">
+        <div class="card-img">👦<span class="badge badge-new">新品</span></div>
+        <div class="card-body">
+          <div class="card-title">七五三キッド（男の子）5才参り対応</div>
+          <div class="card-price">¥50,000</div>
+          <div class="card-seller"><span class="stars">★★★★★</span> かみのこ株式会社</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img" style="background:linear-gradient(135deg,#eff6ff,#dbeafe)">🌧️</div>
+        <div class="card-body">
+          <div class="card-title">雨を呼ぶ壺（動作確認済み）</div>
+          <div class="card-price">¥12,800</div>
+          <div class="card-seller"><span class="stars">★★★★☆</span> 水神雑貨店</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /page-list -->
+
+
+<!-- ── 商品詳細ページ ── -->
+<div class="page" id="page-detail">
+  <div class="detail-back" onclick="goBack()">← 戻る</div>
+  <div id="detail-content"></div>
+</div>
+
+<!-- ── 出品者プロフィールページ ── -->
+<div class="page" id="page-profile">
+  <div class="detail-back" onclick="goBackToDetail()">← 商品に戻る</div>
+  <div id="profile-content"></div>
+</div>
+
+
+<!-- ── ボトムナビ ── -->
+<div class="bottom-nav">
+  <div class="nav-item active"><span class="nav-icon">🏠</span>ホーム</div>
+  <div class="nav-item"><span class="nav-icon">🔍</span>さがす</div>
+  <div class="nav-item"><span class="nav-icon">➕</span>出品</div>
+  <div class="nav-item"><span class="nav-icon">💬</span>メッセージ</div>
+  <div class="nav-item"><span class="nav-icon">👤</span>マイページ</div>
+</div>
+
+
+<script>
+// ── 商品データ ──────────────────────────────────────────
+const PRODUCTS = {
+  '753': {
+    emoji: '👧',
+    imgBg: 'linear-gradient(135deg,#f3e8ff,#fce7f3)',
+    title: '七五三キッド（女の子）3才・7才参り対応',
+    price: '¥50,000',
+    badge: '新品',
+    badgeClass: 'badge-new',
+    tags: ['キッズ・子育て','新品','送料込み'],
+    condition: '新品、未使用',
+    shipping: '出品者負担（コネコ宅急便）',
+    category: 'キッズ・子育て用品',
+    area: '非公開',
+    desc: `ご覧いただきありがとうございます。\n\n健康優良な七五三キッド（女の子）です。\n\n女の子は3才と7才の2回お参りにお連れいただけてお得です。\n\n着物一式（三才用・七才用）付き。破魔矢はついておりません。\n\n※育成に関するご不明点はお気軽にお問い合わせください。\n※発育に個人差がございます。\n\n迅速丁寧に対応いたします。よろしくお願いいたします。`,
+    seller: 'kamiko753',
+    sellerName: 'かみのこ株式会社',
+    sellerEmoji: '🌸',
+    sellerRating: '★★★★★',
+    sellerCount: '取引 34件',
+    sellerBio: '七五三キッドの老舗メーカーです。健康で明るい七五三キッドをお届けします。神社仏閣への奉納・参拝用途に最適。カスタマーサポート充実。',
+    sellerItems: ['👧','👦','👶','🎎','👘','🏮','🎍','🎋','⛩️'],
+    soldItems: [1,2,4,5,7,8],
+    comments: [
+      { name:'元・水の神', emoji:'💧', stars:'★★★★★', text:'3才参りまで無事育ちました！元気いっぱいで、神様を見る目がすでに真剣です。次の7才参りが楽しみです。', date:'2026年2月' },
+      { name:'某山の神（仮）', emoji:'⛰️', stars:'★★★★★', text:'7才まで育て上げました。弓道も一緒に練習してくれて頼もしい限りです。また購入します。', date:'2025年11月' },
+      { name:'宮司の孫', emoji:'🙏', stars:'★★★☆☆', text:'元気に育ってくれているのですが、神様に異常なほど関心があるようで少し心配です。', date:'2025年8月' },
+    ],
+    purchased: false,
+  },
+
+  '753boy': {
+    emoji: '👦',
+    imgBg: 'linear-gradient(135deg,#e0f2fe,#dbeafe)',
+    title: '七五三キッド（男の子）5才参り対応',
+    price: '¥50,000',
+    badge: '新品',
+    badgeClass: 'badge-new',
+    tags: ['キッズ・子育て','新品','送料込み'],
+    condition: '新品、未使用',
+    shipping: '出品者負担（コネコ宅急便）',
+    category: 'キッズ・子育て用品',
+    area: '非公開',
+    desc: `ご覧いただきありがとうございます。\n\n健康優良な七五三キッド（男の子）です。\n\n男の子は5才のお参りが対応となります。\n\n一緒に戦う仲間が欲しい方に特におすすめです。\n\n着物一式（五才用）付き。\n\n※育成に関するご不明点はお気軽にお問い合わせください。`,
+    seller: 'kamiko753',
+    sellerName: 'かみのこ株式会社',
+    sellerEmoji: '🌸',
+    sellerRating: '★★★★★',
+    sellerCount: '取引 34件',
+    sellerBio: '七五三キッドの老舗メーカーです。健康で明るい七五三キッドをお届けします。神社仏閣への奉納・参拝用途に最適。',
+    sellerItems: ['👧','👦','👶','🎎','👘','🏮','🎍','🎋','⛩️'],
+    soldItems: [0,2,4,5,7,8],
+    comments: [
+      { name:'元・水の神', emoji:'💧', stars:'★★★★★', text:'女の子に続き男の子も購入しました。兄妹で神様に対抗する作戦を立てています。', date:'2026年3月' },
+    ],
+    purchased: false,
+  },
+
+  'german': {
+    emoji: '📖',
+    imgBg: 'linear-gradient(135deg,#ede9fe,#ddd6fe)',
+    title: '【書き込みあり】優しいドイツ語 第3版',
+    price: '¥480',
+    badge: '書込あり',
+    badgeClass: 'badge-used',
+    tags: ['本・教科書','書き込みあり','語学'],
+    condition: '目立った傷や汚れなし',
+    shipping: '出品者負担（コネコポスト）',
+    category: '本・教科書 > 語学',
+    area: '非公開',
+    desc: `ご覧いただきありがとうございます。\n\nドイツ語の教科書（第3版）です。\n\n前の持ち主の書き込みがあります。勉強とは直接関係のない内容ですが、読んでいて悪い気はしないと思います。\n\n丁寧に使用しておりましたので、本文はきれいです。\n\nはじめてのお取引でも安心してご購入ください。`,
+    seller: 'ochinai_san',
+    sellerName: '堕ちないさん',
+    sellerEmoji: '🎵',
+    sellerRating: '★★★★★',
+    sellerCount: '取引 1件',
+    sellerBio: 'はじめまして。使わなくなった教科書を出品しています。\nすべて良心的な価格で出品しています。\n書き込みが多いですがご了承ください。',
+    sellerItems: ['📖','📚','📗','📘','📙','📕','📓','📔','📒'],
+    soldItems: [0,1,2,3,4,5,6,7,8],
+    comments: [
+      { name:'大学1年生', emoji:'🌸', stars:'★★★★★', text:'単位、落とさずに済みました。書き込みの意味がわかったとき、泣きました。ありがとうございました。', date:'2024年2月' },
+    ],
+    purchased: true,
+  },
+};
+
+// ── ページ遷移 ──────────────────────────────────────────
+let currentDetail = null;
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showDetail(productId) {
+  currentDetail = productId;
+  const p = PRODUCTS[productId];
+  if (!p) return;
+
+  const descHtml = p.desc.split('\n').map(line =>
+    line ? `<p style="margin-bottom:6px">${line}</p>` : '<p style="margin-bottom:6px"> </p>'
+  ).join('');
+
+  const commentsHtml = p.comments.map(c => `
+    <div class="comment">
+      <div class="comment-top">
+        <div class="comment-avatar">${c.emoji}</div>
+        <span class="comment-name">${c.name}</span>
+        <span class="comment-stars">${c.stars}</span>
+      </div>
+      <div class="comment-text">${c.text}</div>
+      <div class="comment-date">${c.date}</div>
+    </div>
+  `).join('');
+
+  const tagsHtml = p.tags.map(t => `<span class="dtag">${t}</span>`).join('');
+
+  const buyLabel = p.purchased ? '✅ 購入済み' : '購入手続きへ';
+  const buyClass = p.purchased ? 'btn-buy purchased' : 'btn-buy';
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-img" style="background:${p.imgBg}">${p.emoji}</div>
+    <div class="detail-body">
+      <div class="detail-price">${p.price}<span> 税込・送料込</span></div>
+      <div class="detail-title">${p.title}</div>
+      <div class="detail-tags">${tagsHtml}</div>
+
+      <div class="detail-info-box">
+        <div class="detail-row"><span class="dr-label">カテゴリ</span><span class="dr-val">${p.category}</span></div>
+        <div class="detail-row"><span class="dr-label">商品の状態</span><span class="dr-val">${p.condition}</span></div>
+        <div class="detail-row"><span class="dr-label">配送方法</span><span class="dr-val">${p.shipping}</span></div>
+        <div class="detail-row"><span class="dr-label">発送元</span><span class="dr-val">${p.area}</span></div>
+      </div>
+
+      <div class="detail-desc-label">商品説明</div>
+      <div class="detail-desc">${descHtml}</div>
+
+      <div class="seller-box" onclick="showProfile('${productId}')">
+        <div class="seller-top">
+          <div class="seller-avatar">${p.sellerEmoji}</div>
+          <div>
+            <div class="seller-name">${p.sellerName}</div>
+            <div class="seller-meta"><span style="color:#f59e0b">${p.sellerRating}</span>　${p.sellerCount}</div>
+          </div>
+        </div>
+        <div class="seller-bio">${p.sellerBio.split('\n').join('<br>')}</div>
+        <div class="seller-link">プロフィールを見る ›</div>
+      </div>
+
+      <div class="comments-label">購入者のコメント（${p.comments.length}件）</div>
+      ${commentsHtml}
+    </div>
+    <div class="buy-bar">
+      <button class="btn-like">♡ いいね</button>
+      <button class="${buyClass}">${buyLabel}</button>
+    </div>
+  `;
+
+  showPage('page-detail');
+}
+
+function showProfile(productId) {
+  const p = PRODUCTS[productId || currentDetail];
+  if (!p) return;
+
+  const itemsHtml = p.sellerItems.map((emoji, i) => {
+    const isSold = p.soldItems.includes(i);
+    return `
+      <div class="listed-item">
+        ${emoji}
+        ${isSold ? '<div class="sold-overlay">SOLD</div>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('profile-content').innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar-lg">${p.sellerEmoji}</div>
+      <div class="profile-name-lg">${p.sellerName}</div>
+      <div style="font-size:12px;opacity:.8;margin-top:4px">${p.sellerRating}</div>
+      <div class="profile-stats">
+        <div class="stat"><span class="stat-num">${p.soldItems.length}</span>出品数</div>
+        <div class="stat"><span class="stat-num">${p.comments.length}</span>評価</div>
+        <div class="stat"><span class="stat-num">0</span>フォロワー</div>
+      </div>
+    </div>
+    <div class="profile-body">
+      <div class="profile-bio-box">${p.sellerBio.split('\n').join('<br>')}</div>
+      <div class="detail-desc-label" style="margin-bottom:10px">出品一覧</div>
+      <div class="listed-grid">${itemsHtml}</div>
+      ${p.soldItems.length === p.sellerItems.length ? '<div class="sold-line" style="margin-top:12px">すべての商品が売り切れました</div>' : ''}
+    </div>
+  `;
+
+  showPage('page-profile');
+}
+
+function goBack() {
+  showPage('page-list');
+  currentDetail = null;
+}
+
+function goBackToDetail() {
+  if (currentDetail) showDetail(currentDetail);
+  else showPage('page-list');
+}
+
+function filterTab(btn, label) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
